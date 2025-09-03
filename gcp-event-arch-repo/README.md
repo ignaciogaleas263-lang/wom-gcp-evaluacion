@@ -37,7 +37,9 @@ La idea fue que cada vez que llegue un archivo a un bucket, automáticamente se 
 
 Esto permite que cada archivo que entra quede registrado y procesado sin intervención manual.
 
-**Cómo probarlo:**  
+---
+
+Cómo probarlo:
 ```bash
 echo "id,name,amount
 1,Ana,100" > sample.csv
