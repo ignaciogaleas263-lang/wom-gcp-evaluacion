@@ -1,0 +1,57 @@
+
+stages: [ build, upload, validate, apply ]
+image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+variables: { TF_IN_AUTOMATION: "true", TF_VERSION: "1.7.5" }
+
+id_tokens:
+  GCP_OIDC_TOKEN:
+    aud: "https://gitlab.com"
+
+before_script:
+  - apt-get update -y && apt-get install -y curl unzip jq
+  - curl -sSL https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip -o /tmp/terraform.zip
+  - unzip -o /tmp/terraform.zip -d /usr/local/bin
+  - terraform -version
+  - |
+    if [ -z "$WIF_PROVIDER" ] || [ -z "$WIF_SERVICE_ACCOUNT" ] || [ -z "$GCP_PROJECT_ID" ]; then
+      echo "ERROR: Define WIF_PROVIDER, WIF_SERVICE_ACCOUNT, GCP_PROJECT_ID" >&2; exit 1; fi
+    if [ -z "$GCP_OIDC_TOKEN" ]; then echo "ERROR: GCP_OIDC_TOKEN missing"; exit 1; fi
+    printf "%s" "$GCP_OIDC_TOKEN" > /tmp/oidc_token
+    gcloud iam workload-identity-pools create-cred-config "$WIF_PROVIDER"       --service-account="$WIF_SERVICE_ACCOUNT"       --output-file=/tmp/wif.json       --credential-source-file=/tmp/oidc_token
+    gcloud auth login --cred-file=/tmp/wif.json
+    gcloud config set project "$GCP_PROJECT_ID"
+
+build_function_zip:
+  stage: build
+  script: [ "cd infra/function && zip -r ../function.zip . && ls -lh ../function.zip" ]
+  artifacts: { paths: [ "infra/function.zip" ], expire_in: "1 day" }
+
+upload_zip_to_gcs:
+  stage: upload
+  needs: [ "build_function_zip" ]
+  script:
+    - |
+      CODE_BUCKET="${CODE_BUCKET_NAME}"
+      if [ -z "$CODE_BUCKET" ]; then CODE_BUCKET=$(grep '^code_bucket_name' infra/terraform.tfvars | awk -F'=' '{print $2}' | tr -d ' "'); fi
+      if [ -z "$CODE_BUCKET" ]; then echo "ERROR: code_bucket_name no encontrado"; exit 1; fi
+      SHA="${CI_COMMIT_SHA}"
+      OBJECT_PATH="function/function-${SHA}.zip"
+      gsutil cp infra/function.zip gs://$CODE_BUCKET/$OBJECT_PATH
+      echo "TF_VAR_source_object_path=${OBJECT_PATH}" > tf_env
+  artifacts: { reports: { dotenv: "tf_env" }, expire_in: "1 day" }
+
+terraform_validate_plan:
+  stage: validate
+  needs: [ "upload_zip_to_gcs" ]
+  script:
+    - cd infra
+    - terraform init
+    - terraform fmt -recursive
+    - terraform validate
+    - terraform plan -var-file=terraform.tfvars
+
+terraform_apply:
+  stage: apply
+  needs: [ "terraform_validate_plan" ]
+  rules: [ { if: '$CI_COMMIT_BRANCH == "main"' } ]
+  script: [ "cd infra && terraform apply -var-file=terraform.tfvars -auto-approve" ]

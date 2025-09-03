@@ -1,0 +1,17 @@
+
+__pycache__/
+*.pyc
+node_modules/
+dist/
+build/
+.terraform/
+*.tfstate
+*.tfstate.backup
+terraform.tfvars
+terraform.tfvars.json
+.crash
+*.lock.hcl
+.vscode/
+.idea/
+function.zip
+*.log

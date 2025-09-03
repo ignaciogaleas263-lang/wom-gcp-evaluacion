@@ -1,0 +1,13 @@
+
+# Archivo de variables para WOM (ejemplo corporativo) — renombra a: infra/terraform.tfvars
+project_id          = "wom-data-eng"
+region              = "us-central1"
+location            = "US"
+function_name       = "wom-gcs-event-processor"
+code_bucket_name    = "wom-func-code-bucket"
+data_bucket_name    = "wom-data-bucket"
+pubsub_topic_name   = "wom-gcs-object-events"
+dataset_id          = "wom_data"
+raw_table_id        = "files_raw"
+processed_table_id  = "files_processed"
+source_object_path  = "function/function-local.zip"
