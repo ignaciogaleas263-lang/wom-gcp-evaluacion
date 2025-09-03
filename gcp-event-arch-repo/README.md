@@ -39,14 +39,6 @@ Esto permite que cada archivo que entra quede registrado y procesado sin interve
 
 ---
 
-Cómo probarlo:
-```bash
-echo "id,name,amount
-1,Ana,100" > sample.csv
-gsutil cp sample.csv gs://wom-data-bucket/input/sample.csv
-
----
-
 ## 2. CI/CD: GitHub Actions + Terraform 
 
 No quería que esto se despliegue a mano, así que armé un pipeline para automatizarlo.
