@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - "infra/function/**"
+      - "gcp-event-arch-repo/infra/function/**"
       - ".github/workflows/deploy-function.yml"
 
 jobs:
@@ -26,7 +26,10 @@ jobs:
 
       - name: Enable required APIs (idempotent)
         run: |
-          gcloud services enable cloudbuild.googleapis.com artifactregistry.googleapis.com eventarc.googleapis.com run.googleapis.com
+          gcloud services enable cloudbuild.googleapis.com \
+                                 artifactregistry.googleapis.com \
+                                 eventarc.googleapis.com \
+                                 run.googleapis.com
 
       - name: Deploy Cloud Function
         working-directory: gcp-event-arch-repo/infra/function
@@ -39,3 +42,4 @@ jobs:
             --trigger-event-filters="type=google.cloud.storage.object.v1.finalized" \
             --trigger-event-filters="bucket=${{ secrets.GCS_BUCKET }}" \
             --set-env-vars "PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},DATASET_ID=wom_data,RAW_TABLE_ID=files_raw,PROCESSED_TABLE_ID=files_processed"
+
