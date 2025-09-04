@@ -29,7 +29,7 @@ jobs:
           gcloud services enable cloudbuild.googleapis.com artifactregistry.googleapis.com eventarc.googleapis.com run.googleapis.com
 
       - name: Deploy Cloud Function
-        working-directory: infra/function
+        working-directory: gcp-event-arch-repo/infra/function
         run: |
           gcloud functions deploy wom-gcs-trigger \
             --gen2 \
