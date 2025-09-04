@@ -24,6 +24,14 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
+      # Paso de debug para verificar estructura
+      - name: List repo (debug)
+        run: |
+          pwd
+          ls -la
+          echo "---- gcp-event-arch-repo/infra/function ----"
+          ls -la gcp-event-arch-repo/infra/function
+
       - name: Enable required APIs (idempotent)
         run: |
           gcloud services enable cloudbuild.googleapis.com \
@@ -32,14 +40,15 @@ jobs:
                                  run.googleapis.com
 
       - name: Deploy Cloud Function
-        working-directory: gcp-event-arch-repo/infra/function
         run: |
           gcloud functions deploy wom-gcs-trigger \
             --gen2 \
             --region=us-central1 \
             --runtime=python311 \
+            --source=gcp-event-arch-repo/infra/function \
             --entry-point=on_gcs_finalize \
             --trigger-event-filters="type=google.cloud.storage.object.v1.finalized" \
             --trigger-event-filters="bucket=${{ secrets.GCS_BUCKET }}" \
             --set-env-vars "PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},DATASET_ID=wom_data,RAW_TABLE_ID=files_raw,PROCESSED_TABLE_ID=files_processed"
+
 
