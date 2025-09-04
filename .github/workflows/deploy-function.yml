@@ -1,53 +1,18 @@
-name: Deploy Cloud Function (GCS trigger)
-
-on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - "gcp-event-arch-repo/infra/function/**"
-      - ".github/workflows/deploy-function.yml"
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Auth to Google Cloud (JSON key)
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: List repo (debug)
-        run: |
-          pwd
-          ls -la
-          echo "---- gcp-event-arch-repo/infra/function ----"
-          ls -la gcp-event-arch-repo/infra/function || true
-
       - name: Enable required APIs (idempotent)
+        env:
+          CLOUDSDK_CORE_DISABLE_PROMPTS: "1"   # sin preguntas interactivas
         run: |
-          gcloud services enable cloudbuild.googleapis.com \
-                                 artifactregistry.googleapis.com \
-                                 eventarc.googleapis.com \
-                                 run.googleapis.com
-
-      - name: Deploy Cloud Function
-        run: |
-          gcloud functions deploy wom-gcs-trigger \
-            --gen2 \
-            --region=us-central1 \
-            --runtime=python311 \
-            --source=gcp-event-arch-repo/infra/function \
-            --entry-point=on_gcs_finalize \
-            --trigger-event-filters="type=google.cloud.storage.object.v1.finalized" \
-            --trigger-event-filters="bucket=${{ secrets.GCS_BUCKET }}" \
-            --set-env-vars "PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},DATASET_ID=wom_data,RAW_TABLE_ID=files_raw,PROCESSED_TABLE_ID=files_processed"
-
+          gcloud services enable \
+            cloudresourcemanager.googleapis.com \
+            serviceusage.googleapis.com \
+            cloudfunctions.googleapis.com \
+            cloudbuild.googleapis.com \
+            artifactregistry.googleapis.com \
+            eventarc.googleapis.com \
+            run.googleapis.com \
+            iam.googleapis.com \
+            iamcredentials.googleapis.com \
+            logging.googleapis.com \
+            pubsub.googleapis.com \
+            storage.googleapis.com
 
