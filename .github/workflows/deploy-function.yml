@@ -24,13 +24,13 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      # Paso de debug para verificar estructura
+      # debug para verificar la ruta
       - name: List repo (debug)
         run: |
           pwd
           ls -la
           echo "---- gcp-event-arch-repo/infra/function ----"
-          ls -la gcp-event-arch-repo/infra/function
+          ls -la gcp-event-arch-repo/infra/function || true
 
       - name: Enable required APIs (idempotent)
         run: |
@@ -50,5 +50,6 @@ jobs:
             --trigger-event-filters="type=google.cloud.storage.object.v1.finalized" \
             --trigger-event-filters="bucket=${{ secrets.GCS_BUCKET }}" \
             --set-env-vars "PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},DATASET_ID=wom_data,RAW_TABLE_ID=files_raw,PROCESSED_TABLE_ID=files_processed"
+
 
 
