@@ -1,4 +1,3 @@
-
 from datetime import datetime, timedelta
 import os
 from airflow import DAG
@@ -6,12 +5,12 @@ from airflow.providers.google.cloud.operators.gcs_to_bigquery import GCSToBigQue
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.providers.google.cloud.sensors.gcs import GCSObjectsWithPrefixExistenceSensor
 
-PROJECT_ID = os.getenv("PROJECT_ID", "wom-data-eng")
-BUCKET = os.getenv("DATA_BUCKET", "wom-data-bucket")
+PROJECT_ID = os.getenv("PROJECT_ID", "gcp-event-arch-wom")
+BUCKET = os.getenv("DATA_BUCKET", "gcp-event-arch-wom-bucket")
 DATASET = os.getenv("BQ_DATASET", "wom_data")
 RAW_TABLE = os.getenv("RAW_TABLE", "files_raw")
 TRANSFORMED_TABLE = os.getenv("TRANSFORMED_TABLE", "files_processed")
-INPUT_PREFIX = os.getenv("INPUT_PREFIX", "input/")
+INPUT_PREFIX = os.getenv("INPUT_PREFIX", "ingestions/")
 
 default_args = {
     "owner": "data-eng",
@@ -63,9 +62,7 @@ with DAG(
 
     transform_job = BigQueryInsertJobOperator(
         task_id="transform_job",
-        configuration={
-            "query": { "query": transform_sql, "useLegacySql": False }
-        },
+        configuration={"query": {"query": transform_sql, "useLegacySql": False}},
     )
 
     wait_for_files >> load_to_bq >> transform_job
