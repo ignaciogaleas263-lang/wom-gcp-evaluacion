@@ -1,0 +1,5 @@
+
+# SA keys (do not commit)
+*.key.json
+gh-actions-deployer.json
+gcp-event-arch-repo/infra/function/gh-actions-deployer.json
