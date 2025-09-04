@@ -24,7 +24,6 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      # debug para verificar la ruta
       - name: List repo (debug)
         run: |
           pwd
@@ -50,6 +49,5 @@ jobs:
             --trigger-event-filters="type=google.cloud.storage.object.v1.finalized" \
             --trigger-event-filters="bucket=${{ secrets.GCS_BUCKET }}" \
             --set-env-vars "PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},DATASET_ID=wom_data,RAW_TABLE_ID=files_raw,PROCESSED_TABLE_ID=files_processed"
-
 
 
